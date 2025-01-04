@@ -1,0 +1,27 @@
+.btn-cstm {
+  border: none;
+  min-height: 0;
+  height: auto;
+}
+.w-9-10 {
+  width: 90%;
+}
+.poster-img {
+  width: 285px;
+  height: 400px;
+}
+.poster-img-1 {
+  width: 350px;
+  height: 500px;
+}
+.btn-nav-l:hover {
+  border-color: black;
+  background-color: transparent;
+}
+.btn-d-del:hover {
+  background-color: white;
+  color: red;
+}
+.txt-outline-c {
+  text-shadow: -1px 0 rgb(234, 179, 8), 0 1px rgb(234, 179, 8), 1px 0 rgb(234, 179, 8), 0 -1px rgb(234, 179, 8);
+}
