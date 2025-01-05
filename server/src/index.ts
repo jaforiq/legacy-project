@@ -1,16 +1,16 @@
-import express, { Express, Request, Response } from "express";
-import cors from 'cors';
-import { ParamsDictionary } from "express-serve-static-core";
+import cors from "cors";
+import path from "path";
+import multer from "multer";
 import { ParsedQs } from "qs";
-import { Sequelize, Op } from "sequelize";
-import multer from 'multer';
-import path from 'path';
 import sequelize from "./sequelize";
-import User from "./../models/Users";
-import Movie from "./../models/Movies";
-import RR from "./../models/Ratings&Reviews";
-import Genre from "./../models/Genre";
-import MG from "./../models/MovieGenre";
+import User from "./models/Users";
+import Movie from "./models/Movies";
+import Genre from "./models/Genre";
+import MG from "./models/MovieGenre";
+import RR from "./models/Ratings&Reviews";
+import { Sequelize, Op } from "sequelize";
+import express, { Express, Request, Response } from "express";
+import { ParamsDictionary } from "express-serve-static-core";
 // import routes from './routes/router';
 
 // Initialize associations
@@ -25,9 +25,12 @@ Genre.hasMany(MG, { foreignKey: "genre_id" });
 MG.belongsTo(Genre, { foreignKey: "genre_id" });
 
 // Add an association to include genres via MG
-Movie.belongsToMany(Genre, { through: MG, foreignKey: "movie_id", as: "genres" });
+Movie.belongsToMany(Genre, {
+  through: MG,
+  foreignKey: "movie_id",
+  as: "genres",
+});
 Genre.belongsToMany(Movie, { through: MG, foreignKey: "genre_id" });
-
 
 const app: Express = express();
 const port = 3000;
@@ -38,26 +41,25 @@ app.use(express.json());
 
 // app.use('/api', routes);
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('DB testing!');
+app.get("/", (req: Request, res: Response) => {
+  res.send("DB testing!");
 });
 
-app.post('/', (req: Request, res: Response) => {
+app.post("/", (req: Request, res: Response) => {
   console.log(req.body);
-  res.send('Got a POST request');
+  res.send("Got a POST request");
 });
 
-
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // Configure Multer
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, '../uploads');
+    const uploadPath = path.join(__dirname, "../uploads");
     cb(null, uploadPath); // Directory to save the files
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     cb(null, uniqueSuffix + path.extname(file.originalname)); // Unique filename
   },
 });
@@ -65,12 +67,12 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Endpoint to upload image
-app.post('/upload', upload.single('image'), (req, res) => {
+app.post("/upload", upload.single("image"), (req, res) => {
   if (!req.file) {
-    res.status(400).send('No file uploaded.');
+    res.status(400).send("No file uploaded.");
   } else {
     res.status(200).json({
-      message: 'File uploaded successfully!',
+      message: "File uploaded successfully!",
       filePath: `/uploads/${req.file.filename}`,
     });
   }
@@ -132,11 +134,21 @@ app.get("/users", async (req: Request, res: Response) => {
 // Route: Insert a single movie
 app.post("/movies", async (req: Request, res: Response) => {
   // console.log(req.body);
-  const { user_id, title, img, desc, release_yr, director, length, producer, genre } = req.body;
+  const {
+    user_id,
+    title,
+    img,
+    desc,
+    release_yr,
+    director,
+    length,
+    producer,
+    genre,
+  } = req.body;
 
   try {
     const transaction = await sequelize.transaction();
-  
+
     try {
       const movie = await Movie.create(
         { user_id, title, img, desc, release_yr, director, length, producer },
@@ -146,28 +158,29 @@ app.post("/movies", async (req: Request, res: Response) => {
       // console.log("Created movie:", movie);
       // console.log("Movie ID:", movie.dataValues.movie_id);
 
-if (!movie.dataValues.movie_id) {
-  throw new Error("Movie ID is null after creation");
-}
+      if (!movie.dataValues.movie_id) {
+        throw new Error("Movie ID is null after creation");
+      }
 
-const genreInstances = await Promise.all(
-  genre.map(async (g: string) =>
-    Genre.findOrCreate({ where: { genre: g }, transaction })
-  )
-);
+      const genreInstances = await Promise.all(
+        genre.map(async (g: string) =>
+          Genre.findOrCreate({ where: { genre: g }, transaction })
+        )
+      );
 
-// Mapping through the genreInstances and using genreInstance correctly
-await Promise.all(
-  genreInstances.map(async ([genreInstance]) =>
-    MG.create(
-      { movie_id: movie.dataValues.movie_id, genre_id: genreInstance.genre_id },
-      { transaction }
-    )
-  )
-);
+      // Mapping through the genreInstances and using genreInstance correctly
+      await Promise.all(
+        genreInstances.map(async ([genreInstance]) =>
+          MG.create(
+            {
+              movie_id: movie.dataValues.movie_id,
+              genre_id: genreInstance.genre_id,
+            },
+            { transaction }
+          )
+        )
+      );
 
-
-  
       await transaction.commit();
       res.status(201).json({ message: "Movie created successfully", movie });
     } catch (error) {
@@ -201,8 +214,8 @@ await Promise.all(
 //         });
 //     if (movie) {
 //       res.status(200).json({
-//         ...movie.dataValues, 
-//         rating: averageRating, 
+//         ...movie.dataValues,
+//         rating: averageRating,
 //         genres: genres.map(x => x.dataValues.Genre.dataValues.genre),
 //         user: user?.dataValues.name,
 //         rr : rating.map(async (x) => {
@@ -231,10 +244,14 @@ app.get("/movies/:id", async (req: Request, res: Response) => {
     }
 
     // Fetch all ratings for the movie
-    const ratings = await RR.findAll({ where: { movie_id: movie.dataValues.movie_id } });
+    const ratings = await RR.findAll({
+      where: { movie_id: movie.dataValues.movie_id },
+    });
 
     // Fetch the user who created the movie
-    const user = await User.findOne({ where: { user_id: movie.dataValues.user_id } });
+    const user = await User.findOne({
+      where: { user_id: movie.dataValues.user_id },
+    });
 
     // Calculate the average rating
     const averageRating =
@@ -250,7 +267,9 @@ app.get("/movies/:id", async (req: Request, res: Response) => {
     // Resolve reviews (rr array) with user data
     const rr = await Promise.all(
       ratings.map(async (rating) => {
-        const user = await User.findOne({ where: { user_id: rating.dataValues.user_id } });
+        const user = await User.findOne({
+          where: { user_id: rating.dataValues.user_id },
+        });
         return {
           rr_id: rating?.dataValues.rr_id,
           user_id: user?.dataValues.user_id,
@@ -274,7 +293,6 @@ app.get("/movies/:id", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to fetch movie" });
   }
 });
-
 
 // Route: Update a single movie by ID
 app.put(
@@ -309,7 +327,7 @@ app.put(
 );
 
 // Route: Delete a single movie by ID
-app.delete('/movies/:id', async (req: Request, res: Response) => {
+app.delete("/movies/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params; // Get movie ID from URL
 
@@ -331,7 +349,7 @@ app.delete('/movies/:id', async (req: Request, res: Response) => {
     });
     // console.log(movie, rr, mg);
     // Return the deleted movie
-    res.status(200).json({deleted: true});
+    res.status(200).json({ deleted: true });
   } catch (error) {
     console.error("Error deleting movie:", error);
     res.status(500).json({ error: "Failed to delete movie" });
@@ -391,12 +409,11 @@ app.get("/search", async (req: Request, res: Response) => {
   }
 });
 
-
-
 // Route: Read multiple movies by user ID
 app.get("/moviesFromUser/:id", async (req: Request, res: Response) => {
   try {
-    const movies = await Movie.findAll({ where: { user_id: req.params.id },
+    const movies = await Movie.findAll({
+      where: { user_id: req.params.id },
       attributes: {
         include: [
           // Add the average rating as a computed field
@@ -421,11 +438,13 @@ app.get("/moviesFromUser/:id", async (req: Request, res: Response) => {
       ],
       group: ["Movie.movie_id", "genres.genre_id"], // Group by movie ID and genre ID
       order: [["movie_id", "DESC"]], // Sort by movie_id in ascending order
-     });
-     res.status(200).json(movies);
+    });
+    res.status(200).json(movies);
   } catch (error) {
     console.error("Error fetching movies with genres and ratings:", error);
-    res.status(500).json({ error: "Failed to fetch movies with genres and ratings" });
+    res
+      .status(500)
+      .json({ error: "Failed to fetch movies with genres and ratings" });
   }
 });
 
@@ -469,16 +488,17 @@ app.get("/search/genre", async (req: Request, res: Response) => {
         ],
         group: ["Movie.movie_id", "genres.genre_id"], // Group by movie and genre
       });
-  
+
       // Send response
       res.status(200).json(movies);
     }
   } catch (error) {
     console.error("Error fetching movies by genre:", error);
-    res.status(500).json({ message: "An error occurred while fetching movies." });
+    res
+      .status(500)
+      .json({ message: "An error occurred while fetching movies." });
   }
-})
-
+});
 
 // Route: Read all movies
 app.get("/movies", async (req: Request, res: Response) => {
@@ -514,7 +534,9 @@ app.get("/movies", async (req: Request, res: Response) => {
     res.status(200).json(movies);
   } catch (error) {
     console.error("Error fetching movies with genres and ratings:", error);
-    res.status(500).json({ error: "Failed to fetch movies with genres and ratings" });
+    res
+      .status(500)
+      .json({ error: "Failed to fetch movies with genres and ratings" });
   }
 });
 
@@ -553,7 +575,6 @@ app.get("/movies", async (req: Request, res: Response) => {
 //     res.status(500).json({ error: "Failed to fetch movies with genres and ratings" });
 //   }
 // });
-
 
 // Route: Insert a single rr
 app.post("/rrs", async (req: Request, res: Response) => {
@@ -703,9 +724,6 @@ sequelize.sync({ alter: true }).then(() => {
     console.log(`Server is running on http://localhost:${port}`);
   });
 });
-
-
-
 
 // {
 //   user_id: 10,

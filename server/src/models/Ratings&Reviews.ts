@@ -1,5 +1,5 @@
 import { DataTypes, Model } from "sequelize";
-import sequelize from "./../src/sequelize";
+import sequelize from "../sequelize";
 import Movie from "./Movies";
 
 class RR extends Model {}
@@ -12,19 +12,19 @@ RR.init(
       autoIncrement: true,
     },
     movie_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     user_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
     rating: {
-        type: DataTypes.REAL,
-        allowNull: false,
-      },
+      type: DataTypes.REAL,
+      allowNull: false,
+    },
     review: {
-        type: DataTypes.TEXT,
+      type: DataTypes.TEXT,
     },
   },
   {
@@ -33,6 +33,5 @@ RR.init(
     timestamps: false,
   }
 );
-
 
 export default RR;

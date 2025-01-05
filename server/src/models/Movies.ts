@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import sequelize from "./../src/sequelize";
+import sequelize from "../sequelize";
 
 // Define the attributes of the Movie table
 interface MovieAttributes {
@@ -15,7 +15,8 @@ interface MovieAttributes {
 }
 
 // Define creation attributes (attributes required during creation)
-interface MovieCreationAttributes extends Optional<MovieAttributes, "movie_id"> {}
+interface MovieCreationAttributes
+  extends Optional<MovieAttributes, "movie_id"> {}
 
 // Extend the Sequelize Model class with Movie attributes
 class Movie extends Model<MovieAttributes, MovieCreationAttributes> {}

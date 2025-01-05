@@ -1,5 +1,5 @@
 import { DataTypes, Model } from "sequelize";
-import sequelize from "./../src/sequelize";
+import sequelize from "../sequelize";
 import Genre from "./Genre";
 
 class MG extends Model {
@@ -15,9 +15,9 @@ MG.init(
       autoIncrement: true,
     },
     movie_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     genre_id: {
       type: DataTypes.INTEGER,
       allowNull: false,

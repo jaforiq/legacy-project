@@ -1,5 +1,5 @@
 import {Link, useNavigate } from "react-router";
-import { UserContext } from "./UserContext";
+import { UserContext } from "../UserContext";
 import { useContext } from "react";
 
 
